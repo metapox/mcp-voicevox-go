@@ -10,7 +10,7 @@ VOICEVOXを使用したModel Context Protocol (MCP) サーバーの実装です�
 ## インストール
 
 ```bash
-git clone https://github.com/minamitakumi/mcp-voicevox-go.git
+git clone https://github.com/metapox/mcp-voicevox-go.git
 cd mcp-voicevox-go
 go mod tidy
 ```

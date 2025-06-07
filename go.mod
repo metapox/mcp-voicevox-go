@@ -1,4 +1,4 @@
-module github.com/minamitakumi/mcp-voicevox-go
+module github.com/metapox/mcp-voicevox-go
 
 go 1.21
 

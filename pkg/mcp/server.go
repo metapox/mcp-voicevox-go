@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/minamitakumi/mcp-voicevox-go/pkg/voicevox"
+	"github.com/metapox/mcp-voicevox-go/pkg/voicevox"
 	"github.com/rs/cors"
 )
 
@@ -213,9 +213,9 @@ func (s *MCPServer) handleDiscover(requestID string) (map[string]interface{}, er
 	return map[string]interface{}{
 		"id": requestID,
 		"result": map[string]interface{}{
-			"name":        "voicevox",
+			"name":         "voicevox",
 			"display_name": "VOICEVOX",
-			"description": "VOICEVOXを使用して日本語テキストを音声に変換するツール",
+			"description":  "VOICEVOXを使用して日本語テキストを音声に変換するツール",
 			"tools": []map[string]interface{}{
 				{
 					"name":        "text_to_speech",
@@ -239,7 +239,7 @@ func (s *MCPServer) handleDiscover(requestID string) (map[string]interface{}, er
 					"name":        "get_speakers",
 					"description": "利用可能な話者一覧を取得します",
 					"parameters": map[string]interface{}{
-						"type": "object",
+						"type":       "object",
 						"properties": map[string]interface{}{},
 					},
 				},
@@ -251,17 +251,17 @@ func (s *MCPServer) handleDiscover(requestID string) (map[string]interface{}, er
 // handleManifest はマニフェスト情報を返します
 func (s *MCPServer) handleManifest(w http.ResponseWriter, r *http.Request) {
 	manifest := map[string]interface{}{
-		"name":        "voicevox",
+		"name":         "voicevox",
 		"display_name": "VOICEVOX",
-		"description": "VOICEVOXを使用して日本語テキストを音声に変換するツール",
-		"version":     "1.0.0",
-		"api_version": "1",
+		"description":  "VOICEVOXを使用して日本語テキストを音声に変換するツール",
+		"version":      "1.0.0",
+		"api_version":  "1",
 		"auth": map[string]interface{}{
 			"type": "none",
 		},
 		"endpoints": map[string]interface{}{
-			"ws":      fmt.Sprintf("ws://localhost:%d/ws", s.Port),
-			"health":  fmt.Sprintf("http://localhost:%d/health", s.Port),
+			"ws":     fmt.Sprintf("ws://localhost:%d/ws", s.Port),
+			"health": fmt.Sprintf("http://localhost:%d/health", s.Port),
 		},
 	}
 
