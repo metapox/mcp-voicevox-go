@@ -20,7 +20,7 @@ func (p *Player) Play(filepath string) error {
 	}
 
 	var cmd *exec.Cmd
-	
+
 	switch runtime.GOOS {
 	case "darwin":
 		cmd = exec.Command("afplay", filepath)

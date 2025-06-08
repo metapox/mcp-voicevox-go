@@ -25,10 +25,10 @@ func NewClient(baseURL string) *Client {
 
 // Speaker はVOICEVOXの話者情報を表す構造体です
 type Speaker struct {
-	Name         string `json:"name"`
-	SpeakerID    int    `json:"speaker_id"`
-	StyleID      int    `json:"style_id"`
-	StyleName    string `json:"style_name"`
+	Name      string `json:"name"`
+	SpeakerID int    `json:"speaker_id"`
+	StyleID   int    `json:"style_id"`
+	StyleName string `json:"style_name"`
 }
 
 // GetSpeakers は利用可能な話者の一覧を取得します
@@ -76,12 +76,12 @@ func (c *Client) CreateAudioQuery(text string, speakerID int) (*AudioQuery, erro
 	params := url.Values{}
 	params.Add("text", text)
 	params.Add("speaker", fmt.Sprintf("%d", speakerID))
-	
+
 	req, err := http.NewRequest("POST", c.BaseURL+"/audio_query?"+params.Encode(), nil)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	resp, err := c.HTTPClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (c *Client) SynthesizeVoice(query *AudioQuery, speakerID int) ([]byte, erro
 
 	params := url.Values{}
 	params.Add("speaker", fmt.Sprintf("%d", speakerID))
-	
+
 	req, err := http.NewRequest("POST", c.BaseURL+"/synthesis?"+params.Encode(), bytes.NewBuffer(queryJSON))
 	if err != nil {
 		return nil, err
