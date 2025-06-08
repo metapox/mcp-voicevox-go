@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mcp-voicevox:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - MCP_VOICEVOX_URL=http://voicevox:50021
+      - MCP_VOICEVOX_PORT=8080
+      - MCP_VOICEVOX_DEFAULT_SPEAKER=3
+    volumes:
+      - ./temp:/tmp/mcp-voicevox
+    depends_on:
+      - voicevox
+    restart: unless-stopped
+
+  # VOICEVOX Engine (optional - for development)
+  voicevox:
+    image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+    ports:
+      - "50021:50021"
+    environment:
+      - VV_CPU_NUM_THREADS=4
+    restart: unless-stopped
+
+volumes:
+  temp:
