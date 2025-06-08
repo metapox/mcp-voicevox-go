@@ -73,6 +73,19 @@ type AudioQuery struct {
 
 // CreateAudioQuery はテキストから音声合成のためのクエリを作成します
 func (c *Client) CreateAudioQuery(text string, speakerID int) (*AudioQuery, error) {
+	return c.CreateAudioQueryWithOptions(text, speakerID, nil)
+}
+
+// AudioQueryOptions は音声合成のオプションを表す構造体です
+type AudioQueryOptions struct {
+	SpeedScale      *float64 `json:"speed_scale,omitempty"`      // 話速 (0.5-2.0)
+	PitchScale      *float64 `json:"pitch_scale,omitempty"`      // 音高 (-0.15-0.15)
+	IntonationScale *float64 `json:"intonation_scale,omitempty"` // 抑揚 (0.0-2.0)
+	VolumeScale     *float64 `json:"volume_scale,omitempty"`     // 音量 (0.0-2.0)
+}
+
+// CreateAudioQueryWithOptions はオプション付きで音声合成のためのクエリを作成します
+func (c *Client) CreateAudioQueryWithOptions(text string, speakerID int, options *AudioQueryOptions) (*AudioQuery, error) {
 	params := url.Values{}
 	params.Add("text", text)
 	params.Add("speaker", fmt.Sprintf("%d", speakerID))
@@ -96,6 +109,22 @@ func (c *Client) CreateAudioQuery(text string, speakerID int) (*AudioQuery, erro
 	var query AudioQuery
 	if err := json.NewDecoder(resp.Body).Decode(&query); err != nil {
 		return nil, err
+	}
+
+	// オプションが指定されている場合は適用
+	if options != nil {
+		if options.SpeedScale != nil {
+			query.SpeedScale = *options.SpeedScale
+		}
+		if options.PitchScale != nil {
+			query.PitchScale = *options.PitchScale
+		}
+		if options.IntonationScale != nil {
+			query.IntonationScale = *options.IntonationScale
+		}
+		if options.VolumeScale != nil {
+			query.VolumeScale = *options.VolumeScale
+		}
 	}
 
 	return &query, nil

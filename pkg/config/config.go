@@ -16,6 +16,12 @@ type Config struct {
 	VoicevoxURL    string `json:"voicevox_url"`
 	DefaultSpeaker int    `json:"default_speaker"`
 
+	// Audio synthesis settings
+	DefaultSpeedScale      float64 `json:"default_speed_scale"`
+	DefaultPitchScale      float64 `json:"default_pitch_scale"`
+	DefaultIntonationScale float64 `json:"default_intonation_scale"`
+	DefaultVolumeScale     float64 `json:"default_volume_scale"`
+
 	// File settings
 	TempDir string `json:"temp_dir"`
 
@@ -26,11 +32,15 @@ type Config struct {
 // DefaultConfig はデフォルト設定を返します
 func DefaultConfig() *Config {
 	return &Config{
-		Port:           8080,
-		VoicevoxURL:    "http://localhost:50021",
-		DefaultSpeaker: 3,
-		TempDir:        os.TempDir(),
-		EnablePlayback: false,
+		Port:                   8080,
+		VoicevoxURL:            "http://localhost:50021",
+		DefaultSpeaker:         3,
+		DefaultSpeedScale:      1.0,
+		DefaultPitchScale:      0.0,
+		DefaultIntonationScale: 1.0,
+		DefaultVolumeScale:     1.0,
+		TempDir:                os.TempDir(),
+		EnablePlayback:         false,
 	}
 }
 
@@ -64,6 +74,47 @@ func (c *Config) LoadFromEnv() error {
 		c.EnablePlayback = envPlayback == "true"
 	}
 
+	// 音声合成パラメータの環境変数読み込み
+	if envSpeedScale := os.Getenv("MCP_VOICEVOX_DEFAULT_SPEED_SCALE"); envSpeedScale != "" {
+		if s, err := strconv.ParseFloat(envSpeedScale, 64); err == nil {
+			if s >= 0.5 && s <= 2.0 {
+				c.DefaultSpeedScale = s
+			}
+		} else {
+			return fmt.Errorf("invalid speed scale value: %s", envSpeedScale)
+		}
+	}
+
+	if envPitchScale := os.Getenv("MCP_VOICEVOX_DEFAULT_PITCH_SCALE"); envPitchScale != "" {
+		if p, err := strconv.ParseFloat(envPitchScale, 64); err == nil {
+			if p >= -0.15 && p <= 0.15 {
+				c.DefaultPitchScale = p
+			}
+		} else {
+			return fmt.Errorf("invalid pitch scale value: %s", envPitchScale)
+		}
+	}
+
+	if envIntonationScale := os.Getenv("MCP_VOICEVOX_DEFAULT_INTONATION_SCALE"); envIntonationScale != "" {
+		if i, err := strconv.ParseFloat(envIntonationScale, 64); err == nil {
+			if i >= 0.0 && i <= 2.0 {
+				c.DefaultIntonationScale = i
+			}
+		} else {
+			return fmt.Errorf("invalid intonation scale value: %s", envIntonationScale)
+		}
+	}
+
+	if envVolumeScale := os.Getenv("MCP_VOICEVOX_DEFAULT_VOLUME_SCALE"); envVolumeScale != "" {
+		if v, err := strconv.ParseFloat(envVolumeScale, 64); err == nil {
+			if v >= 0.0 && v <= 2.0 {
+				c.DefaultVolumeScale = v
+			}
+		} else {
+			return fmt.Errorf("invalid volume scale value: %s", envVolumeScale)
+		}
+	}
+
 	return nil
 }
 
@@ -83,6 +134,23 @@ func (c *Config) Validate() error {
 
 	if c.TempDir == "" {
 		return fmt.Errorf("temp directory cannot be empty")
+	}
+
+	// 音声合成パラメータの妥当性チェック
+	if c.DefaultSpeedScale < 0.5 || c.DefaultSpeedScale > 2.0 {
+		return fmt.Errorf("default speed scale must be between 0.5 and 2.0, got %f", c.DefaultSpeedScale)
+	}
+
+	if c.DefaultPitchScale < -0.15 || c.DefaultPitchScale > 0.15 {
+		return fmt.Errorf("default pitch scale must be between -0.15 and 0.15, got %f", c.DefaultPitchScale)
+	}
+
+	if c.DefaultIntonationScale < 0.0 || c.DefaultIntonationScale > 2.0 {
+		return fmt.Errorf("default intonation scale must be between 0.0 and 2.0, got %f", c.DefaultIntonationScale)
+	}
+
+	if c.DefaultVolumeScale < 0.0 || c.DefaultVolumeScale > 2.0 {
+		return fmt.Errorf("default volume scale must be between 0.0 and 2.0, got %f", c.DefaultVolumeScale)
 	}
 
 	return nil

@@ -75,10 +75,36 @@ func (h *Handler) handleToolsList(id interface{}) MCPResponse {
 					"text": map[string]interface{}{
 						"type":        "string",
 						"description": "音声に変換するテキスト",
+						"maxLength":   1000,
 					},
 					"speaker_id": map[string]interface{}{
 						"type":        "integer",
 						"description": "話者ID（省略時はデフォルト話者を使用）",
+						"minimum":     0,
+					},
+					"speed_scale": map[string]interface{}{
+						"type":        "number",
+						"description": "話速（0.5-2.0、デフォルト: 1.0）",
+						"minimum":     0.5,
+						"maximum":     2.0,
+					},
+					"pitch_scale": map[string]interface{}{
+						"type":        "number",
+						"description": "音高（-0.15-0.15、デフォルト: 0.0）",
+						"minimum":     -0.15,
+						"maximum":     0.15,
+					},
+					"intonation_scale": map[string]interface{}{
+						"type":        "number",
+						"description": "抑揚（0.0-2.0、デフォルト: 1.0）",
+						"minimum":     0.0,
+						"maximum":     2.0,
+					},
+					"volume_scale": map[string]interface{}{
+						"type":        "number",
+						"description": "音量（0.0-2.0、デフォルト: 1.0）",
+						"minimum":     0.0,
+						"maximum":     2.0,
 					},
 				},
 				"required": []string{"text"},
@@ -132,8 +158,48 @@ func (h *Handler) handleTextToSpeech(id interface{}, args map[string]interface{}
 		speakerID = int(sid)
 	}
 
+	// 音声合成オプションを準備
+	var options *voicevox.AudioQueryOptions
+	hasOptions := args["speed_scale"] != nil || args["pitch_scale"] != nil || 
+		args["intonation_scale"] != nil || args["volume_scale"] != nil
+	
+	// デフォルト設定またはパラメータ指定の値を使用
+	options = &voicevox.AudioQueryOptions{
+		SpeedScale:      &h.config.DefaultSpeedScale,
+		PitchScale:      &h.config.DefaultPitchScale,
+		IntonationScale: &h.config.DefaultIntonationScale,
+		VolumeScale:     &h.config.DefaultVolumeScale,
+	}
+	
+	// パラメータで上書き
+	if hasOptions {
+		if speedScale, ok := args["speed_scale"].(float64); ok {
+			if speedScale >= 0.5 && speedScale <= 2.0 {
+				options.SpeedScale = &speedScale
+			}
+		}
+		
+		if pitchScale, ok := args["pitch_scale"].(float64); ok {
+			if pitchScale >= -0.15 && pitchScale <= 0.15 {
+				options.PitchScale = &pitchScale
+			}
+		}
+		
+		if intonationScale, ok := args["intonation_scale"].(float64); ok {
+			if intonationScale >= 0.0 && intonationScale <= 2.0 {
+				options.IntonationScale = &intonationScale
+			}
+		}
+		
+		if volumeScale, ok := args["volume_scale"].(float64); ok {
+			if volumeScale >= 0.0 && volumeScale <= 2.0 {
+				options.VolumeScale = &volumeScale
+			}
+		}
+	}
+
 	// 音声クエリ作成
-	query, err := h.voicevoxClient.CreateAudioQuery(text, speakerID)
+	query, err := h.voicevoxClient.CreateAudioQueryWithOptions(text, speakerID, options)
 	if err != nil {
 		appErr := errors.NewVoicevoxError("Failed to create audio query", err)
 		return h.createErrorResponse(id, appErr)
@@ -164,12 +230,21 @@ func (h *Handler) handleTextToSpeech(id interface{}, args map[string]interface{}
 		playbackStatus = "ファイルに保存され、音声を再生しました"
 	}
 
+	// オプション情報を含む結果メッセージ
+	optionsInfo := ""
+	if options != nil {
+		optionsInfo += fmt.Sprintf("\n話速: %.2f", *options.SpeedScale)
+		optionsInfo += fmt.Sprintf("\n音高: %.2f", *options.PitchScale)
+		optionsInfo += fmt.Sprintf("\n抑揚: %.2f", *options.IntonationScale)
+		optionsInfo += fmt.Sprintf("\n音量: %.2f", *options.VolumeScale)
+	}
+
 	result := ToolCallResult{
 		Content: []ContentItem{
 			{
 				Type: "text",
-				Text: fmt.Sprintf("音声合成が完了しました。\nテキスト: %s\n話者ID: %d\nファイル: %s\n状態: %s",
-					text, speakerID, filepath, playbackStatus),
+				Text: fmt.Sprintf("音声合成が完了しました。\nテキスト: %s\n話者ID: %d%s\nファイル: %s\n状態: %s",
+					text, speakerID, optionsInfo, filepath, playbackStatus),
 			},
 		},
 	}
