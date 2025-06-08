@@ -9,10 +9,175 @@ VOICEVOXを使用したModel Context Protocol (MCP) サーバーの実装です�
 
 ## インストール
 
+### Go installを使用（推奨）
+
+```bash
+go install github.com/metapox/mcp-voicevox-go@latest
+```
+
+### ソースからビルド
+
 ```bash
 git clone https://github.com/metapox/mcp-voicevox-go.git
 cd mcp-voicevox-go
 go mod tidy
+go build -o mcp-voicevox .
+```
+
+## クイックスタート
+
+### 1. VOICEVOXエンジンの起動
+
+VOICEVOXアプリケーションを起動するか、VOICEVOXエンジンを直接起動してください。
+
+### 2. Amazon Q CLIでの設定
+
+`~/.aws/amazonq/mcp.json` に以下の設定を追加：
+
+```json
+{
+  "mcpServers": {
+    "voicevox": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true"
+      }
+    }
+  }
+}
+```
+
+### 3. Amazon Q CLIの再起動
+
+```bash
+# Amazon Q CLIを再起動して設定を反映
+q chat
+```
+
+これで `voicevox___text_to_speech` と `voicevox___get_speakers` ツールが利用可能になります。
+
+## 設定テンプレート
+
+### 基本設定
+
+```json
+{
+  "mcpServers": {
+    "voicevox": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true"
+      },
+      "autoApprove": [
+        "get_speakers",
+        "text_to_speech"
+      ]
+    }
+  }
+}
+```
+
+### 1.5倍速設定
+
+```json
+{
+  "mcpServers": {
+    "voicevox-fast": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true",
+        "MCP_VOICEVOX_DEFAULT_SPEED_SCALE": "1.5"
+      },
+      "autoApprove": [
+        "get_speakers",
+        "text_to_speech"
+      ]
+    }
+  }
+}
+```
+
+### 2倍速設定
+
+```json
+{
+  "mcpServers": {
+    "voicevox-2x": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true",
+        "MCP_VOICEVOX_DEFAULT_SPEED_SCALE": "2.0"
+      },
+      "autoApprove": [
+        "get_speakers",
+        "text_to_speech"
+      ]
+    }
+  }
+}
+```
+
+### カスタム音声設定
+
+```json
+{
+  "mcpServers": {
+    "voicevox-custom": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true",
+        "MCP_VOICEVOX_DEFAULT_SPEAKER": "1",
+        "MCP_VOICEVOX_DEFAULT_SPEED_SCALE": "1.3",
+        "MCP_VOICEVOX_DEFAULT_PITCH_SCALE": "0.05",
+        "MCP_VOICEVOX_DEFAULT_INTONATION_SCALE": "1.2"
+      },
+      "autoApprove": [
+        "get_speakers",
+        "text_to_speech"
+      ]
+    }
+  }
+}
+```
+
+### 複数設定の併用
+
+```json
+{
+  "mcpServers": {
+    "voicevox-normal": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true"
+      },
+      "autoApprove": ["get_speakers", "text_to_speech"]
+    },
+    "voicevox-fast": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true",
+        "MCP_VOICEVOX_DEFAULT_SPEED_SCALE": "1.5"
+      },
+      "autoApprove": ["get_speakers", "text_to_speech"]
+    },
+    "voicevox-2x": {
+      "command": "mcp-voicevox",
+      "args": ["stdio"],
+      "env": {
+        "MCP_VOICEVOX_ENABLE_PLAYBACK": "true",
+        "MCP_VOICEVOX_DEFAULT_SPEED_SCALE": "2.0"
+      },
+      "autoApprove": ["get_speakers", "text_to_speech"]
+    }
+  }
+}
 ```
 
 ## 使い方
@@ -20,52 +185,54 @@ go mod tidy
 ### HTTPサーバーとしての起動
 
 ```bash
-go run cmd/*.go server
+mcp-voicevox server
 ```
 
 ### Stdio経由での起動（MCP用）
 
 ```bash
-go run cmd/*.go stdio
+mcp-voicevox stdio
 ```
 
-### オプション
+## オプション
 
-#### serverサブコマンド
+### 共通オプション
 
-- `--port`, `-p`: サーバーのポート番号（デフォルト: 8080）
-- `--voicevox-url`, `-u`: VOICEVOXのAPIエンドポイント（デフォルト: http://localhost:50021）
-- `--temp-dir`, `-t`: 一時ファイルを保存するディレクトリ（デフォルト: システムの一時ディレクトリ）
-- `--default-speaker`, `-s`: デフォルトの話者ID（デフォルト: 3）
-- `--default-speed-scale`: デフォルトの話速（0.5-2.0、デフォルト: 1.0）
-- `--default-pitch-scale`: デフォルトの音高（-0.15-0.15、デフォルト: 0.0）
-- `--default-intonation-scale`: デフォルトの抑揚（0.0-2.0、デフォルト: 1.0）
-- `--default-volume-scale`: デフォルトの音量（0.0-2.0、デフォルト: 1.0）
+| オプション | 短縮形 | 説明 | デフォルト |
+|------------|--------|------|------------|
+| `--voicevox-url` | `-u` | VOICEVOXのAPIエンドポイント | `http://localhost:50021` |
+| `--temp-dir` | `-t` | 一時ファイルディレクトリ | システムの一時ディレクトリ |
+| `--default-speaker` | `-s` | デフォルトの話者ID | `3` |
+| `--default-speed-scale` | | デフォルトの話速（0.5-2.0） | `1.0` |
+| `--default-pitch-scale` | | デフォルトの音高（-0.15-0.15） | `0.0` |
+| `--default-intonation-scale` | | デフォルトの抑揚（0.0-2.0） | `1.0` |
+| `--default-volume-scale` | | デフォルトの音量（0.0-2.0） | `1.0` |
 
-#### stdioサブコマンド
+### serverサブコマンド専用
 
-- `--voicevox-url`, `-u`: VOICEVOXのAPIエンドポイント（デフォルト: http://localhost:50021）
-- `--temp-dir`, `-t`: 一時ファイルを保存するディレクトリ（デフォルト: システムの一時ディレクトリ）
-- `--default-speaker`, `-s`: デフォルトの話者ID（デフォルト: 3）
-- `--enable-playback`: 音声の自動再生を有効にする
-- `--default-speed-scale`: デフォルトの話速（0.5-2.0、デフォルト: 1.0）
-- `--default-pitch-scale`: デフォルトの音高（-0.15-0.15、デフォルト: 0.0）
-- `--default-intonation-scale`: デフォルトの抑揚（0.0-2.0、デフォルト: 1.0）
-- `--default-volume-scale`: デフォルトの音量（0.0-2.0、デフォルト: 1.0）
+| オプション | 短縮形 | 説明 | デフォルト |
+|------------|--------|------|------------|
+| `--port` | `-p` | サーバーのポート番号 | `8080` |
 
-### 環境変数
+### stdioサブコマンド専用
 
-以下の環境変数で設定を変更できます：
+| オプション | 説明 | デフォルト |
+|------------|------|------------|
+| `--enable-playback` | 音声の自動再生を有効にする | `false` |
 
-- `MCP_VOICEVOX_PORT`: サーバーのポート番号（serverサブコマンドのみ）
-- `MCP_VOICEVOX_URL`: VOICEVOXのAPIエンドポイント
-- `MCP_VOICEVOX_TEMP_DIR`: 一時ファイルディレクトリ
-- `MCP_VOICEVOX_DEFAULT_SPEAKER`: デフォルトの話者ID
-- `MCP_VOICEVOX_ENABLE_PLAYBACK`: 音声の自動再生を有効にする（true/false）
-- `MCP_VOICEVOX_DEFAULT_SPEED_SCALE`: デフォルトの話速（0.5-2.0）
-- `MCP_VOICEVOX_DEFAULT_PITCH_SCALE`: デフォルトの音高（-0.15-0.15）
-- `MCP_VOICEVOX_DEFAULT_INTONATION_SCALE`: デフォルトの抑揚（0.0-2.0）
-- `MCP_VOICEVOX_DEFAULT_VOLUME_SCALE`: デフォルトの音量（0.0-2.0）
+## 環境変数
+
+| 変数名 | 説明 | デフォルト |
+|--------|------|------------|
+| `MCP_VOICEVOX_PORT` | サーバーのポート番号（serverのみ） | `8080` |
+| `MCP_VOICEVOX_URL` | VOICEVOXのAPIエンドポイント | `http://localhost:50021` |
+| `MCP_VOICEVOX_TEMP_DIR` | 一時ファイルディレクトリ | システムの一時ディレクトリ |
+| `MCP_VOICEVOX_DEFAULT_SPEAKER` | デフォルトの話者ID | `3` |
+| `MCP_VOICEVOX_ENABLE_PLAYBACK` | 音声の自動再生（true/false） | `false` |
+| `MCP_VOICEVOX_DEFAULT_SPEED_SCALE` | デフォルトの話速（0.5-2.0） | `1.0` |
+| `MCP_VOICEVOX_DEFAULT_PITCH_SCALE` | デフォルトの音高（-0.15-0.15） | `0.0` |
+| `MCP_VOICEVOX_DEFAULT_INTONATION_SCALE` | デフォルトの抑揚（0.0-2.0） | `1.0` |
+| `MCP_VOICEVOX_DEFAULT_VOLUME_SCALE` | デフォルトの音量（0.0-2.0） | `1.0` |
 
 例:
 
@@ -74,38 +241,33 @@ export MCP_VOICEVOX_DEFAULT_SPEAKER=1
 export MCP_VOICEVOX_PORT=8888
 export MCP_VOICEVOX_ENABLE_PLAYBACK=true
 export MCP_VOICEVOX_DEFAULT_SPEED_SCALE=1.5
-go run cmd/*.go server
+mcp-voicevox server
 ```
 
 ### Amazon Q CLIとの連携
 
-Amazon Q CLIで使用するには、MCPサーバーとして登録します:
+Amazon Q CLIで使用するには、上記のmcp.json設定を使用してください。設定後、以下のツールが利用可能になります：
 
-```bash
-q mcp add --name voicevox --command "mcp-voicevox stdio"
-```
-
-環境変数を使用する場合:
-
-```bash
-q mcp add --name voicevox --command "mcp-voicevox stdio" --env MCP_VOICEVOX_DEFAULT_SPEAKER=1 --env MCP_VOICEVOX_ENABLE_PLAYBACK=true --env MCP_VOICEVOX_DEFAULT_SPEED_SCALE=1.5
-```
-
-これにより、Amazon Q内で `voicevox___text_to_speech` と `voicevox___get_speakers` ツールが利用可能になります。
+- `voicevox___text_to_speech`: テキストを音声に変換
+- `voicevox___get_speakers`: 利用可能な話者一覧を取得
 
 ## 機能
 
-- `text_to_speech`: テキストを音声に変換します
-  - パラメータ:
-    - `text`: 音声に変換するテキスト（必須）
-    - `speaker_id`: 話者ID（省略時はデフォルト話者を使用）
-    - `speed_scale`: 話速（0.5-2.0、省略時はデフォルト値を使用）
-    - `pitch_scale`: 音高（-0.15-0.15、省略時はデフォルト値を使用）
-    - `intonation_scale`: 抑揚（0.0-2.0、省略時はデフォルト値を使用）
-    - `volume_scale`: 音量（0.0-2.0、省略時はデフォルト値を使用）
-  - 音声再生が有効な場合、合成後に自動で音声を再生します
+### text_to_speech
+テキストを音声に変換します。
 
-- `get_speakers`: 利用可能な話者一覧を取得します
+**パラメータ:**
+- `text`: 音声に変換するテキスト（必須）
+- `speaker_id`: 話者ID（省略時はデフォルト話者を使用）
+- `speed_scale`: 話速（0.5-2.0、省略時はデフォルト値を使用）
+- `pitch_scale`: 音高（-0.15-0.15、省略時はデフォルト値を使用）
+- `intonation_scale`: 抑揚（0.0-2.0、省略時はデフォルト値を使用）
+- `volume_scale`: 音量（0.0-2.0、省略時はデフォルト値を使用）
+
+音声再生が有効な場合、合成後に自動で音声を再生します。
+
+### get_speakers
+利用可能な話者一覧を取得します。
 
 ## 音声パラメータの詳細
 
@@ -142,19 +304,21 @@ q mcp add --name voicevox --command "mcp-voicevox stdio" --env MCP_VOICEVOX_DEFA
   - 1.0: 通常の音量
   - 2.0: 大音量
 
-## 使用例
+## コマンドライン使用例
 
-### 1.5倍速で起動
+### 基本的な使用方法
+
 ```bash
-# コマンドライン引数
+# 1.5倍速で起動
 mcp-voicevox stdio --default-speed-scale 1.5 --enable-playback
 
-# 環境変数
+# 環境変数で設定
 export MCP_VOICEVOX_DEFAULT_SPEED_SCALE=1.5
 mcp-voicevox stdio
 ```
 
 ### 複数パラメータの組み合わせ
+
 ```bash
 # 少し早口で高めの声、抑揚強め
 mcp-voicevox stdio \
@@ -162,19 +326,6 @@ mcp-voicevox stdio \
   --default-pitch-scale 0.08 \
   --default-intonation-scale 1.4 \
   --enable-playback
-```
-
-### Amazon Q CLI での設定例
-```bash
-# 1.5倍速設定
-q mcp add --name voicevox-fast \
-  --command "mcp-voicevox stdio" \
-  --env MCP_VOICEVOX_DEFAULT_SPEED_SCALE=1.5 \
-  --env MCP_VOICEVOX_ENABLE_PLAYBACK=true
-
-# 2倍速設定
-q mcp add --name voicevox-2x \
-  --command "mcp-voicevox stdio --default-speed-scale 2.0 --enable-playback"
 ```
 
 ## 音声再生対応プラットフォーム
