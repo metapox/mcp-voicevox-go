@@ -76,6 +76,22 @@ MCP VOICEVOX Goは、VOICEVOXエンジンを使用してテキストを音声に
             "speaker_id": {
               "type": "integer",
               "description": "話者ID（省略時はデフォルト話者を使用）"
+            },
+            "speed_scale": {
+              "type": "number",
+              "description": "話速（0.5-2.0、省略時はデフォルト値を使用）"
+            },
+            "pitch_scale": {
+              "type": "number",
+              "description": "音高（-0.15-0.15、省略時はデフォルト値を使用）"
+            },
+            "intonation_scale": {
+              "type": "number",
+              "description": "抑揚（0.0-2.0、省略時はデフォルト値を使用）"
+            },
+            "volume_scale": {
+              "type": "number",
+              "description": "音量（0.0-2.0、省略時はデフォルト値を使用）"
             }
           },
           "required": ["text"]
@@ -110,7 +126,11 @@ MCP VOICEVOX Goは、VOICEVOXエンジンを使用してテキストを音声に
     "name": "text_to_speech",
     "arguments": {
       "text": "こんにちは、世界！",
-      "speaker_id": 3
+      "speaker_id": 3,
+      "speed_scale": 1.5,
+      "pitch_scale": 0.05,
+      "intonation_scale": 1.2,
+      "volume_scale": 1.0
     }
   }
 }
@@ -125,7 +145,7 @@ MCP VOICEVOX Goは、VOICEVOXエンジンを使用してテキストを音声に
     "content": [
       {
         "type": "text",
-        "text": "音声合成が完了しました。\nテキスト: こんにちは、世界！\n話者ID: 3\nファイル: /tmp/mcp-voicevox/speech_3_1699123456.wav\n状態: ファイルに保存され、音声を再生しました"
+        "text": "音声合成が完了しました。\nテキスト: こんにちは、世界！\n話者ID: 3\n話速: 1.50\n音高: 0.05\n抑揚: 1.20\n音量: 1.00\nファイル: /tmp/mcp-voicevox/speech_3_1699123456.wav\n状態: ファイルに保存され、音声を再生しました"
       }
     ]
   }
@@ -204,6 +224,10 @@ MCP VOICEVOX Goは、VOICEVOXエンジンを使用してテキストを音声に
 | `MCP_VOICEVOX_TEMP_DIR` | 一時ファイルディレクトリ | システムの一時ディレクトリ |
 | `MCP_VOICEVOX_DEFAULT_SPEAKER` | デフォルトの話者ID | `3` |
 | `MCP_VOICEVOX_ENABLE_PLAYBACK` | 音声の自動再生を有効にする | `false` |
+| `MCP_VOICEVOX_DEFAULT_SPEED_SCALE` | デフォルトの話速（0.5-2.0） | `1.0` |
+| `MCP_VOICEVOX_DEFAULT_PITCH_SCALE` | デフォルトの音高（-0.15-0.15） | `0.0` |
+| `MCP_VOICEVOX_DEFAULT_INTONATION_SCALE` | デフォルトの抑揚（0.0-2.0） | `1.0` |
+| `MCP_VOICEVOX_DEFAULT_VOLUME_SCALE` | デフォルトの音量（0.0-2.0） | `1.0` |
 
 ### コマンドラインオプション
 
@@ -232,6 +256,10 @@ mcp-voicevox stdio [flags]
 | `--temp-dir` | `-t` | 一時ファイルを保存するディレクトリ | システムの一時ディレクトリ |
 | `--default-speaker` | `-s` | デフォルトの話者ID | `3` |
 | `--enable-playback` | | 音声の自動再生を有効にする | `false` |
+| `--default-speed-scale` | | デフォルトの話速（0.5-2.0） | `1.0` |
+| `--default-pitch-scale` | | デフォルトの音高（-0.15-0.15） | `0.0` |
+| `--default-intonation-scale` | | デフォルトの抑揚（0.0-2.0） | `1.0` |
+| `--default-volume-scale` | | デフォルトの音量（0.0-2.0） | `1.0` |
 
 ## 使用例
 
@@ -241,10 +269,15 @@ mcp-voicevox stdio [flags]
 # MCPサーバーとして登録
 q mcp add --name voicevox --command "mcp-voicevox stdio"
 
-# 環境変数を使用する場合
+# 環境変数を使用する場合（1.5倍速設定）
 q mcp add --name voicevox --command "mcp-voicevox stdio" \
   --env MCP_VOICEVOX_DEFAULT_SPEAKER=1 \
-  --env MCP_VOICEVOX_ENABLE_PLAYBACK=true
+  --env MCP_VOICEVOX_ENABLE_PLAYBACK=true \
+  --env MCP_VOICEVOX_DEFAULT_SPEED_SCALE=1.5
+
+# コマンドライン引数を使用する場合（2倍速設定）
+q mcp add --name voicevox-2x \
+  --command "mcp-voicevox stdio --default-speed-scale 2.0 --enable-playback"
 ```
 
 ### Docker での使用
@@ -253,10 +286,11 @@ q mcp add --name voicevox --command "mcp-voicevox stdio" \
 # サーバーモードで起動
 docker run -p 8080:8080 mcp-voicevox:latest
 
-# 環境変数を指定
+# 環境変数を指定（1.5倍速設定）
 docker run -p 8080:8080 \
   -e MCP_VOICEVOX_URL=http://voicevox:50021 \
   -e MCP_VOICEVOX_DEFAULT_SPEAKER=1 \
+  -e MCP_VOICEVOX_DEFAULT_SPEED_SCALE=1.5 \
   mcp-voicevox:latest
 ```
 

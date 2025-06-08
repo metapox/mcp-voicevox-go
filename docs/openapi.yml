@@ -155,19 +155,25 @@ components:
           minimum: 0
         speed_scale:
           type: number
-          description: 話速（0.5-2.0）
+          description: 話速（0.5-2.0、省略時はデフォルト値を使用）
           example: 1.0
           minimum: 0.5
           maximum: 2.0
         pitch_scale:
           type: number
-          description: 音高（-0.15-0.15）
+          description: 音高（-0.15-0.15、省略時はデフォルト値を使用）
           example: 0.0
           minimum: -0.15
           maximum: 0.15
         intonation_scale:
           type: number
-          description: 抑揚（0.0-2.0）
+          description: 抑揚（0.0-2.0、省略時はデフォルト値を使用）
+          example: 1.0
+          minimum: 0.0
+          maximum: 2.0
+        volume_scale:
+          type: number
+          description: 音量（0.0-2.0、省略時はデフォルト値を使用）
           example: 1.0
           minimum: 0.0
           maximum: 2.0
